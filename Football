@@ -1,0 +1,83 @@
+Python
+import tkinter as tk
+import time
+import pyttsx3
+
+def start_timer():
+    global interval_time, rest_time, repetitions, current_rep
+    try:
+        interval_time = int(interval_entry.get()) * 60
+        rest_time = int(rest_entry.get()) * 60
+        repetitions = int(reps_entry.get())
+        current_rep = 1
+        update_timer()
+    except ValueError:
+        status_label.config(text="Please enter valid numbers.")
+
+def update_timer():
+    global interval_time, rest_time, repetitions, current_rep, timer_id
+    if current_rep <= repetitions:
+        if interval_time > 0:
+            timer_label.config(text=f"Interval {current_rep} starts in: {interval_time // 60:02d}:{interval_time % 60:02d}")
+            interval_time -= 1
+            timer_id = root.after(1000, update_timer)
+        elif rest_time > 0:
+            if rest_time == int(rest_entry.get()) * 60:
+                announce(f"Interval {current_rep} start!")
+            timer_label.config(text=f"Interval {current_rep} ends in: {rest_time // 60:02d}:{rest_time % 60:02d}")
+            rest_time -= 1
+            timer_id = root.after(1000, update_timer)
+        else:
+            announce(f"Interval {current_rep} end!")
+            current_rep += 1
+            interval_time = int(interval_entry.get()) * 60
+            rest_time = int(rest_entry.get()) * 60
+            update_timer()
+    else:
+        timer_label.config(text="Timer finished!")
+        announce("Timer finished!")
+
+def announce(message):
+    engine = pyttsx3.init()
+    engine.say(message)
+    engine.runAndWait()
+
+def stop_timer():
+    global timer_id
+    if timer_id:
+        root.after_cancel(timer_id)
+        timer_id = None
+        timer_label.config(text="Timer stopped")
+
+root = tk.Tk()
+root.title("Football Tournament Timer")
+
+interval_label = tk.Label(root, text="Interval duration (minutes):")
+interval_label.grid(row=0, column=0)
+interval_entry = tk.Entry(root)
+interval_entry.grid(row=0, column=1)
+
+rest_label = tk.Label(root, text="Rest duration (minutes):")
+rest_label.grid(row=1, column=0)
+rest_entry = tk.Entry(root)
+rest_entry.grid(row=1, column=1)
+
+reps_label = tk.Label(root, text="Repetitions:")
+reps_label.grid(row=2, column=0)
+reps_entry = tk.Entry(root)
+reps_entry.grid(row=2, column=1)
+
+start_button = tk.Button(root, text="Start", command=start_timer)
+start_button.grid(row=3, column=0)
+
+stop_button = tk.Button(root, text="Stop", command=stop_timer)
+stop_button.grid(row=3, column=1)
+
+timer_label = tk.Label(root, text="Timer ready")
+timer_label.grid(row=4, column=0, columnspan=2)
+
+status_label = tk.Label(root, text="")
+status_label.grid(row=5, column=0, columnspan=2)
+
+timer_id = None
+root.mainloop()
